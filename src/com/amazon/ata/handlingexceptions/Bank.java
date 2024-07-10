@@ -2,6 +2,9 @@ package com.amazon.ata.handlingexceptions;
 
 import java.math.BigDecimal;
 
+import com.amazon.ata.handlingexceptions.exceptions.InsufficientFundsException;
+import com.amazon.ata.handlingexceptions.exceptions.InvalidInputException;
+import com.amazon.ata.handlingexceptions.exceptions.TransactionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,6 +14,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Bank {
     private Logger log = LogManager.getLogger(Bank.class);
+    private Validator validator = new Validator();
 
     /**
      * Transfer money from one account to another. 
@@ -20,8 +24,18 @@ public class Bank {
      * @param amount of money to transfer.
      * @return true if transfer was successful, false if transfer fails due to insufficient funds
      */
-    public boolean transfer(BankAccount fromAccount, BankAccount toAccount, BigDecimal amount) {
-        // TODO: implement
-        return false;
+    public boolean transfer(BankAccount fromAccount, BankAccount toAccount, BigDecimal amount) throws InvalidInputException {
+        validator.validate(amount);
+
+        try {
+            fromAccount.withdraw(amount);
+            toAccount.deposit(amount);
+            return true;
+        } catch (InsufficientFundsException e) {
+            log.error("Transfer failed due to insufficient funds" + e.getMessage());
+            return false;
+        } catch (TransactionException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
